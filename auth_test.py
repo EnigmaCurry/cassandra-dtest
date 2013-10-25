@@ -45,6 +45,30 @@ class TestAuth(Tester):
         with self.assertRaises(AuthenticationException):
             self.get_cursor(user='doesntexist', password='doesntmatter')
 
+
+    @since('1.2')
+    def password_case_test(self):
+        "Test login case issues - CASSANDRA-6233" 
+        self.prepare()
+
+        cassandra = self.get_cursor(user='cassandra', password='cassandra')
+        cassandra.execute("CREATE USER CamelCaseMan WITH PASSWORD 'NaNaNA'")
+        cassandra.execute("GRANT CREATE ON ALL KEYSPACES TO CamelCaseMan")
+
+        self.get_cursor(user='CamelCaseMan', password='NaNaNA')
+
+        bad_logins = ['camelcaseman','CAMELCASEMAN']
+        bad_passwords = ['nanana','NANANA']
+        # Try all combinations of logins/passwords except for the good one:
+        for login in bad_logins + ['CamelCaseMan']:
+            for password in bad_passwords:
+                with self.assertRaises(AuthenticationException):
+                    self.get_cursor(user=login, password=password)
+        for password in bad_passwords + ['NaNaNA']:
+            for login in bad_logins:
+                with self.assertRaises(AuthenticationException):
+                    self.get_cursor(user=login, password=password)
+                
     @since('1.2')
     def only_superuser_can_create_users_test(self):
         self.prepare()
