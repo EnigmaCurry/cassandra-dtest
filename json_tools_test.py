@@ -70,8 +70,7 @@ class TestJson(Tester):
 
         debug("Importing JSON file...")
 
-        with open("schema.json", "r") as in_file:
-            node1.run_json2sstable(in_file, "test", "users")
+        node1.run_json2sstable("schema.json", "test", "users")
         os.remove("schema.json")
 
         debug("Verifying import...")
